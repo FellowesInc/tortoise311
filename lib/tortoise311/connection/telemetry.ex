@@ -6,6 +6,14 @@ defmodule Tortoise311.Connection.Telemetry do
   [:tortoise311, :connection, :rx_bytes] => Number of bytes received by the connection identified by its client id
 
   Meta-data: %{client_id: <client_id>}
+
+  [:tortoise311, :connection, :connect, :start] => Emitted when a connection attempt begins
+
+  Meta-data: %{client_id: <client_id>}
+
+  [:tortoise311, :connection, :connect, :failure] => Emitted when a connection attempt fails
+
+  Meta-data: %{client_id: <client_id>, reason: <reason>}
   """
 
   use GenServer

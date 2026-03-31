@@ -420,6 +420,12 @@ defmodule Tortoise311.Connection do
     # check if the will needs to be updated for each connection
     state = cancel_keep_alive(state) |> maybe_update_last_will()
 
+    :telemetry.execute(
+      [:tortoise311, :connection, :connect, :start],
+      %{},
+      %{client_id: state.connect.client_id}
+    )
+
     with {%Connack{status: :accepted} = connack, socket} <-
            do_connect(state.server, state.connect),
          {:ok, state} = init_connection(socket, state) do
@@ -442,6 +448,12 @@ defmodule Tortoise311.Connection do
       %Connack{status: {:refused, reason}} ->
         {timeout, state} = Map.get_and_update(state, :backoff, &Backoff.next/1)
 
+        :telemetry.execute(
+          [:tortoise311, :connection, :connect, :failure],
+          %{},
+          %{client_id: state.connect.client_id, reason: {:refused, reason}}
+        )
+
         Logger.warning(
           "[Tortoise311] Connection refused: #{inspect(reason)}, #{inspect(summarize_state(state))}"
         )
@@ -451,6 +463,12 @@ defmodule Tortoise311.Connection do
 
       {:error, reason} ->
         {timeout, state} = Map.get_and_update(state, :backoff, &Backoff.next/1)
+
+        :telemetry.execute(
+          [:tortoise311, :connection, :connect, :failure],
+          %{},
+          %{client_id: state.connect.client_id, reason: reason}
+        )
 
         Logger.warning(
           "[Tortoise311] Connection failed: #{inspect(reason)}, #{inspect(summarize_state(state))}. Retrying in #{timeout} msecs."
